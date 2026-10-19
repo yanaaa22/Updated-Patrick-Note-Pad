@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Patrick Journal Under the Sea</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Outfit & Fredoka -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        deepOcean: '#005f73',
+                        vibrantBlue: '#0087ca',
+                        skyCyan: '#00b4d8',
+                        softAqua: '#48cae4',
+                        lightCyan: '#90e0ef',
+                        foamWhite: '#e0f7fa',
+                        cardGlass: 'rgba(230, 247, 255, 0.82)',
+                        patrickPink: '#f7aef8',
+                        patrickLime: '#a3e635'
+                    },
+                    boxShadow: {
+                        'bubble': 'inset -2px -2px 6px rgba(0, 119, 182, 0.3), inset 2px 2px 8px rgba(255, 255, 255, 0.95), 0 8px 24px rgba(0, 180, 216, 0.3)',
+                        'glow': '0 0 25px rgba(0, 180, 216, 0.45)',
+                        'card': '0 12px 32px 0 rgba(0, 77, 112, 0.25)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .bubbly-font {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+
+        /* Restored Bright Aqua Glassmorphism */
+        .glass-card {
+            background: rgba(225, 245, 254, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid rgba(144, 224, 239, 0.7);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid #48cae4;
+            color: #004b6e;
+            transition: all 0.25s ease;
+        }
+
+        .glass-input:focus {
+            background: #ffffff;
+            border-color: #0087ca;
+            outline: none;
+            box-shadow: 0 0 16px rgba(0, 180, 216, 0.4);
+        }
+
+        .text-glow-title {
+            text-shadow: 0 2px 10px rgba(0, 119, 182, 0.3);
+        }
+
+        /* Custom Aqua Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(144, 224, 239, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00b4d8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0077b6;
+        }
+
+        @keyframes heroFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1.5deg); }
+        }
+
+        .animate-hero {
+            animation: heroFloat 4.5s ease-in-out infinite;
+        }
+
+        #oceanCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-[#00b4d8] via-[#0077b6] to-[#03045e] min-h-screen text-[#003554] relative overflow-x-hidden pb-16">
+
+    <!-- Canvas: Glowing Jellyfish (Image 1 Ref) & Glossy Water Bubbles (Image 2 Ref) -->
+    <canvas id="oceanCanvas"></canvas>
+
+    <!-- Main Content Layout -->
+    <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-6">
+
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 glass-card p-4 sm:p-5 rounded-3xl shadow-card">
+            <div class="flex items-center space-x-3.5">
+                <!-- Clamshell SVG Icon -->
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#0077b6] via-[#00b4d8] to-[#90e0ef] flex items-center justify-center shadow-bubble p-2.5 transition-transform hover:scale-105">
+                    <svg class="w-full h-full text-white filter drop-shadow" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12c0 3.2 1.5 6.05 3.85 7.89L12 16.5l6.15 3.39C20.5 18.05 22 15.2 22 12c0-5.52-4.48-10-10-10zm0 11.8L8.2 16.8l.9-4.3-3.3-3 4.4-.4L12 5l1.8 4.1 4.4.4-3.3 3 .9 4.3L12 13.8z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-wide bubbly-font text-[#00486c] text-glow-title" id="appTitle">
+                        Patrick Journal Under the Sea
+                    </h1>
+                    <p class="text-xs text-[#006699] flex items-center gap-1.5 font-semibold" id="appSubtitle">
+                        <!-- Tiny Jellyfish SVG Icon -->
+                        <svg class="w-4 h-4 text-[#0087ca] inline" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2a8 8 0 0 0-8 8v2h16v-2a8 8 0 0 0-8-8z"/>
+                            <path d="M6 12v7m4-7v9m4-9v7m4-7v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span>A bright undersea notebook for your thoughts</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Language Switcher Bar -->
+            <div class="flex items-center space-x-1 bg-white/70 p-1.5 rounded-2xl border border-skyCyan/50 w-full sm:w-auto justify-center shadow-inner">
+                <button onclick="changeLanguage('zh')" id="btn-zh" class="px-3.5 py-1.5 text-xs rounded-xl font-medium transition-all">简体中文</button>
+                <button onclick="changeLanguage('fil')" id="btn-fil" class="px-3.5 py-1.5 text-xs rounded-xl font-medium transition-all">Filipino</button>
+                <button onclick="changeLanguage('en')" id="btn-en" class="px-3.5 py-1.5 text-xs rounded-xl font-medium transition-all">English</button>
+            </div>
+        </header>
+
+        <!-- Glass Hero Capsule: 3D Patrick Star -->
+        <div class="glass-card rounded-3xl p-5 sm:p-6 mb-6 text-center relative overflow-hidden shadow-card">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-5 relative z-10">
+                <!-- Patrick Character Capsule -->
+                <div class="relative cursor-pointer animate-hero group" onclick="patrickTalk()">
+                    <div class="w-24 h-24 sm:w-28 sm:h-28 relative rounded-full bg-gradient-to-b from-white to-[#caf0f8] p-2 border-2 border-[#48cae4] shadow-bubble flex items-center justify-center">
+                        <svg class="w-full h-full filter drop-shadow-[0_4px_10px_rgba(247,174,248,0.5)]" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="patBody3D" x1="40" y1="20" x2="160" y2="180">
+                                    <stop offset="0%" stop-color="#ffd1f2"/>
+                                    <stop offset="50%" stop-color="#f7aef8"/>
+                                    <stop offset="100%" stop-color="#d946ef"/>
+                                </linearGradient>
+                                <linearGradient id="patShorts3D" x1="60" y1="130" x2="140" y2="175">
+                                    <stop offset="0%" stop-color="#bef264"/>
+                                    <stop offset="100%" stop-color="#65a30d"/>
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Body -->
+                            <path d="M100 12 C108 45, 128 60, 168 72 C188 78, 185 102, 158 112 C138 118, 132 128, 136 158 C139 178, 115 182, 100 168 C85 182, 61 178, 64 158 C68 128, 62 118, 42 112 C15 102, 12 78, 32 72 C72 60, 92 45, 100 12 Z" fill="url(#patBody3D)" stroke="#a21caf" stroke-width="2"/>
+                            
+                            <!-- Swim Shorts -->
+                            <path d="M62 136 C80 131, 120 131, 138 136 C143 158, 135 168, 120 166 C105 164, 95 164, 80 166 C65 168, 57 158, 62 136 Z" fill="url(#patShorts3D)" stroke="#3f6212" stroke-width="2"/>
+                            <path d="M75 144 Q78 139, 82 144 Q87 146, 82 150 Q78 154, 75 150 Z" fill="#7e22ce"/>
+                            <path d="M118 146 Q121 141, 125 146 Q130 148, 125 152 Q121 156, 118 152 Z" fill="#7e22ce"/>
+
+                            <!-- Eyes -->
+                            <ellipse cx="88" cy="68" rx="10" ry="15" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                            <ellipse cx="112" cy="68" rx="10" ry="15" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+                            <circle cx="91" cy="70" r="4" fill="#0284c7"/>
+                            <circle cx="109" cy="70" r="4" fill="#0284c7"/>
+
+                            <!-- Eyebrows -->
+                            <path d="M80 48 L92 46" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M120 48 L108 46" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/>
+
+                            <!-- Smile -->
+                            <path d="M86 84 Q100 100, 114 84" fill="#9f1239" stroke="#0f172a" stroke-width="2"/>
+                            <path d="M92 91 Q100 87, 108 91 Q100 97, 92 91" fill="#fb7185"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Speech Bubble -->
+                <div class="bg-white/90 border-2 border-[#48cae4] px-5 py-3.5 rounded-2xl max-w-sm text-left shadow-md">
+                    <div class="flex items-center space-x-2 mb-1">
+                        <svg class="w-4 h-4 text-[#d946ef]" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span class="text-xs font-bold text-[#a21caf] tracking-wider font-mono">PATRICK SAYS:</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-[#003a5c] font-semibold transition-all duration-300 leading-relaxed" id="patrickSpeech">
+                        "Welcome to my journal! Click on me anytime to hear what I'm thinking!"
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Journal Creation Form -->
+        <div class="glass-card rounded-3xl p-5 sm:p-6 mb-6 shadow-card">
+            <div class="flex items-center justify-between border-b border-[#48cae4]/40 pb-3 mb-5">
+                <div class="flex items-center space-x-2.5">
+                    <div class="p-2 rounded-xl bg-[#0087ca] text-white shadow-bubble">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12c0 3.6 1.9 6.75 4.75 8.52L12 16l5.25 4.52C20.1 18.75 22 15.6 22 12c0-5.52-4.48-10-10-10zm0 11.5L8.5 16.5l.9-4.2-3.2-2.9 4.3-.4L12 5l1.5 4 4.3.4-3.2 2.9.9 4.2L12 13.5z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-base sm:text-lg font-bold text-[#00486c] tracking-wide bubbly-font" id="createEntryTitle">Create Ocean Note</h2>
+                </div>
+                
+                <button type="button" onclick="resetForm()" id="btnCancel" class="hidden text-xs text-[#0077b6] hover:text-[#00486c] font-bold underline">
+                    Cancel Editing
+                </button>
+            </div>
+
+            <form id="journalForm" onsubmit="saveEntry(event)" class="space-y-4">
+                <input type="hidden" id="editEntryId" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[#00557a] mb-1.5" id="lblNoteTitle">Note Title</label>
+                        <input type="text" id="noteTitle" required class="w-full px-4 py-2.5 rounded-2xl glass-input text-xs sm:text-sm font-medium" placeholder="Enter title...">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-[#00557a] mb-1.5" id="lblNoteDate">Date</label>
+                        <input type="date" id="noteDate" required class="w-full px-4 py-2.5 rounded-2xl glass-input text-xs sm:text-sm font-medium">
+                    </div>
+                </div>
+
+                <!-- Oceanic Mood Selector -->
+                <div>
+                    <label class="block text-xs font-bold text-[#00557a] mb-2" id="lblNoteMood">Ocean Mood & Energy</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5" id="moodOptionsContainer">
+                    </div>
+                </div>
+
+                <!-- Content Area -->
+                <div>
+                    <label class="block text-xs font-bold text-[#00557a] mb-1.5" id="lblNoteContent">Journal Thoughts</label>
+                    <textarea id="noteContent" rows="4" required class="w-full px-4 py-3 rounded-2xl glass-input text-xs sm:text-sm resize-none font-medium" placeholder="Write your underwater thoughts..."></textarea>
+                </div>
+
+                <!-- Action Button -->
+                <div class="flex justify-end items-center pt-2">
+                    <button type="submit" id="btnSave" class="w-full sm:w-auto px-8 py-3 rounded-2xl bg-gradient-to-r from-[#0087ca] via-[#00b4d8] to-[#48cae4] text-white font-bold text-xs sm:text-sm tracking-wider shadow-bubble hover:brightness-105 active:scale-95 transition-all flex items-center justify-center space-x-2 border border-white">
+                        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12c0 3.6 1.9 6.75 4.75 8.52L12 16l5.25 4.52C20.1 18.75 22 15.6 22 12c0-5.52-4.48-10-10-10z"/>
+                        </svg>
+                        <span id="btnSaveText" class="bubbly-font">Save Note</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Filter & Control Bar -->
+        <div class="glass-card rounded-3xl p-4 mb-6 shadow-card flex flex-col md:flex-row justify-between items-center gap-3.5">
+            <div class="relative w-full md:w-64">
+                <input type="text" id="searchInput" oninput="renderEntries()" class="w-full pl-9 pr-3.5 py-2.5 rounded-2xl glass-input text-xs font-medium" placeholder="Search notes...">
+                <svg class="w-4 h-4 text-[#0077b6] absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between md:justify-end gap-2.5 w-full md:w-auto">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs text-[#00557a] font-bold" id="filterMoodLabel">Filter:</span>
+                    <select id="moodFilter" onchange="renderEntries()" class="px-3.5 py-2 rounded-2xl glass-input text-xs font-medium bg-white">
+                    </select>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <!-- Export JSON -->
+                    <button onclick="exportData()" id="btnExport" class="px-4 py-2 rounded-2xl bg-[#0087ca] text-white text-xs font-bold shadow-bubble hover:brightness-110 transition-all flex items-center space-x-1.5">
+                        <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span id="exportText">Export</span>
+                    </button>
+
+                    <!-- Import JSON -->
+                    <label class="px-4 py-2 rounded-2xl bg-[#00b4d8] text-white text-xs font-bold shadow-bubble hover:brightness-110 transition-all flex items-center space-x-1.5 cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2a8 8 0 0 0-8 8v2h16v-2a8 8 0 0 0-8-8z"/>
+                            <path d="M6 12v6m4-6v8m4-8v6m4-6v8" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <span id="importText">Import</span>
+                        <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes List Grid -->
+        <div id="entriesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        </div>
+
+        <!-- Empty State Card -->
+        <div id="emptyState" class="hidden text-center py-12 glass-card rounded-3xl">
+            <svg class="w-12 h-12 mx-auto text-[#0087ca]/60 mb-2" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12c0 3.6 1.9 6.75 4.75 8.52L12 16l5.25 4.52C20.1 18.75 22 15.6 22 12c0-5.52-4.48-10-10-10z"/>
+            </svg>
+            <p class="text-xs sm:text-sm text-[#00557a] font-bold" id="emptyStateMsg">No notes found under the sea. Write your first entry above!</p>
+        </div>
+
+    </div>
+
+    <!-- Toast Popup -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-white border-2 border-[#00b4d8] px-5 py-3 rounded-2xl shadow-glow flex items-center space-x-2.5">
+        <svg class="w-5 h-5 text-[#0087ca]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <p id="toastMessage" class="text-xs font-bold text-[#00486c]"></p>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        /* MULTI-LANGUAGE TRANSLATIONS */
+        const translations = {
+            zh: {
+                appTitle: "派大星海底日记",
+                appSubtitle: "记录海底私密想法的秘密记事本",
+                createEntryTitle: "撰写海底日记",
+                lblNoteTitle: "日记标题",
+                lblNoteDate: "日期",
+                lblNoteMood: "海洋心情与能量",
+                lblNoteContent: "私密日记内容",
+                placeholderTitle: "输入标题...",
+                placeholderContent: "写下你此刻的海底心情...",
+                btnSave: "保存日记",
+                btnUpdate: "更新日记",
+                searchPlaceholder: "搜索日记...",
+                filterMoodLabel: "筛选:",
+                allMoods: "所有心情",
+                exportText: "导出",
+                importText: "导入",
+                emptyStateMsg: "还没有海底日记哦，快在上方写下第一篇吧！",
+                savedSuccess: "日记保存成功！",
+                deleteSuccess: "日记已成功删除！",
+                exportSuccess: "备份导出成功！",
+                importSuccess: "日记导入成功！",
+                importError: "文件格式不正确！",
+                cancelEdit: "取消编辑",
+                patrickQuotes: [
+                    "“知识不能替代友情，我宁愿做个傻瓜也不愿失去你。”",
+                    "“蛋黄酱也是乐器吗？”",
+                    "“今天也是在比奇堡开心快乐的一天！”",
+                    "“好朋友就是无论发生什么，都在你身边。”",
+                    "“思维的火花有时候就像海底的泡泡！”"
+                ]
+            },
+            fil: {
+                appTitle: "Patrick Journal Under the Sea",
+                appSubtitle: "Isang tahimik na silid para sa iyong mga saloobin",
+                createEntryTitle: "Gumawa ng Bagong Tala",
+                lblNoteTitle: "Pamagat ng Tala",
+                lblNoteDate: "Petsa",
+                lblNoteMood: "Pakiramdam sa Dagat",
+                lblNoteContent: "Nilalaman ng Tala",
+                placeholderTitle: "Isulat ang pamagat...",
+                placeholderContent: "Isulat ang iyong lihim na saloobin...",
+                btnSave: "I-save ang Tala",
+                btnUpdate: "I-update ang Tala",
+                searchPlaceholder: "Magsaliksik...",
+                filterMoodLabel: "Pumili:",
+                allMoods: "Lahat ng Pakiramdam",
+                exportText: "I-export",
+                importText: "I-import",
+                emptyStateMsg: "Wala pang naisulat na tala. Gumawa ng una sa itaas!",
+                savedSuccess: "Matagumpay na na-save ang tala!",
+                deleteSuccess: "Matagumpay na nabura ang tala!",
+                exportSuccess: "Matagumpay na na-export ang backup!",
+                importSuccess: "Matagumpay na na-import ang mga tala!",
+                importError: "Maling format ng file!",
+                cancelEdit: "Kanselahin ang Pag-edit",
+                patrickQuotes: [
+                    "\"Ang kaalaman ay hindi makakapalit sa pagkakaibigan!\"",
+                    "\"Instrumento rin ba ang mayonnaise?\"",
+                    "\"Masayang araw na naman dito sa ilalim ng dagat!\"",
+                    "\"Ang sarap magpalutang-lutang sa tubig!\"",
+                    "\"Minsan ang pinakamagandang naiisip ay parang bula!\""
+                ]
+            },
+            en: {
+                appTitle: "Patrick Journal Under the Sea",
+                appSubtitle: "A bright undersea notebook for your thoughts",
+                createEntryTitle: "Create Ocean Note",
+                lblNoteTitle: "Note Title",
+                lblNoteDate: "Date",
+                lblNoteMood: "Ocean Mood & Energy",
+                lblNoteContent: "Journal Thoughts",
+                placeholderTitle: "Enter title...",
+                placeholderContent: "Write your underwater thoughts...",
+                btnSave: "Save Note",
+                btnUpdate: "Update Note",
+                searchPlaceholder: "Search notes...",
+                filterMoodLabel: "Filter:",
+                allMoods: "All Moods",
+                exportText: "Export",
+                importText: "Import",
+                emptyStateMsg: "No notes found under the sea. Write your first entry above!",
+                savedSuccess: "Journal entry saved successfully!",
+                deleteSuccess: "Journal entry deleted!",
+                exportSuccess: "Backup exported successfully!",
+                importSuccess: "Journal imported successfully!",
+                importError: "Invalid JSON backup file!",
+                cancelEdit: "Cancel Editing",
+                patrickQuotes: [
+                    "\"Knowledge can't replace friendship. I'd rather be an idiot with you!\"",
+                    "\"Is mayonnaise an instrument?\"",
+                    "\"Another glorious day under the sea!\"",
+                    "\"Floating underwater is the best feeling ever!\"",
+                    "\"Sometimes my thoughts float away like bubbles!\""
+                ]
+            }
+        };
+
+        /* MOOD DEFINITIONS WITH SVG ICONS */
+        const moodDefinitions = [
+            {
+                id: 'glowing_pearl',
+                iconSvg: `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/><circle cx="10" cy="10" r="2" fill="#fff" opacity="0.9"/><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" opacity="0.3"/></svg>`,
+                labels: { en: 'Luminous Pearl', zh: '闪耀珍珠', fil: 'Mahiwagang Perlas' },
+                color: 'from-[#00b4d8] to-[#48cae4] text-white'
+            },
+            {
+                id: 'calm_current',
+                iconSvg: `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M2 12c2 0 3-2.5 6-2.5s4 2.5 6 2.5 4-2.5 6-2.5 3 2.5 4 2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M2 17c2 0 3-2.5 6-2.5s4 2.5 6 2.5 4-2.5 6-2.5 3 2.5 4 2.5"/></svg>`,
+                labels: { en: 'Tranquil Water', zh: '平静洋流', fil: 'Tahimik na Tubig' },
+                color: 'from-[#0077b6] to-[#00b4d8] text-white'
+            },
+            {
+                id: 'bubbly_spirit',
+                iconSvg: `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a8 8 0 0 0-8 8v2h16v-2a8 8 0 0 0-8-8z"/><path d="M6 12v6m4-6v8m4-8v6m4-6v8" stroke="currentColor" stroke-width="2"/></svg>`,
+                labels: { en: 'Bubbly Joy', zh: '欢快水花', fil: 'Masayang Bula' },
+                color: 'from-[#48cae4] to-[#a0c4ff] text-[#003853]'
+            },
+            {
+                id: 'coral_glow',
+                iconSvg: `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
+                labels: { en: 'Coral Warmth', zh: '微光珊瑚', fil: 'Makulay na Koral' },
+                color: 'from-[#f7aef8] to-[#f472b6] text-white'
+            },
+            {
+                id: 'deep_trench',
+                iconSvg: `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
+                labels: { en: 'Deep Reflection', zh: '深海沉思', fil: 'Malalim na Isip' },
+                color: 'from-[#003554] to-[#006494] text-white'
+            }
+        ];
+
+        /* APP STATE */
+        let currentLang = 'en';
+        let selectedMood = 'glowing_pearl';
+        let journalEntries = JSON.parse(localStorage.getItem('patrick_undersea_notes') || '[]');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('noteDate').valueAsDate = new Date();
+            renderMoodOptions();
+            changeLanguage('en');
+            initOceanEngine();
+            renderEntries();
+        });
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+
+            document.getElementById('appTitle').innerText = t.appTitle;
+            document.getElementById('appSubtitle').querySelector('span').innerText = t.appSubtitle;
+            document.getElementById('createEntryTitle').innerText = t.createEntryTitle;
+            document.getElementById('lblNoteTitle').innerText = t.lblNoteTitle;
+            document.getElementById('lblNoteDate').innerText = t.lblNoteDate;
+            document.getElementById('lblNoteMood').innerText = t.lblNoteMood;
+            document.getElementById('lblNoteContent').innerText = t.lblNoteContent;
+            document.getElementById('noteTitle').placeholder = t.placeholderTitle;
+            document.getElementById('noteContent').placeholder = t.placeholderContent;
+
+            const isEditing = !!document.getElementById('editEntryId').value;
+            document.getElementById('btnSaveText').innerText = isEditing ? t.btnUpdate : t.btnSave;
+            document.getElementById('btnCancel').innerText = t.cancelEdit;
+            document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+            document.getElementById('filterMoodLabel').innerText = t.filterMoodLabel;
+            document.getElementById('exportText').innerText = t.exportText;
+            document.getElementById('importText').innerText = t.importText;
+            document.getElementById('emptyStateMsg').innerText = t.emptyStateMsg;
+
+            ['zh', 'fil', 'en'].forEach(l => {
+                const btn = document.getElementById(`btn-${l}`);
+                if (l === lang) {
+                    btn.className = "px-3.5 py-1.5 text-xs rounded-xl font-bold bg-[#0087ca] text-white shadow-bubble";
+                } else {
+                    btn.className = "px-3.5 py-1.5 text-xs rounded-xl transition-all font-bold text-[#006699] hover:bg-[#48cae4]/20";
+                }
+            });
+
+            renderMoodOptions();
+            renderFilterDropdown();
+            renderEntries();
+            document.getElementById('patrickSpeech').innerText = t.patrickQuotes[0];
+        }
+
+        function renderMoodOptions() {
+            const container = document.getElementById('moodOptionsContainer');
+            container.innerHTML = '';
+
+            moodDefinitions.forEach(m => {
+                const isSelected = m.id === selectedMood;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => {
+                    selectedMood = m.id;
+                    renderMoodOptions();
+                };
+
+                btn.className = `flex flex-col items-center justify-center p-2.5 rounded-2xl border-2 transition-all duration-200 ${
+                    isSelected 
+                        ? 'bg-gradient-to-br ' + m.color + ' border-white shadow-glow scale-105 font-bold' 
+                        : 'bg-white/80 border-[#48cae4] text-[#00486c] hover:bg-[#caf0f8] font-semibold'
+                }`;
+
+                btn.innerHTML = `
+                    <div class="mb-1">${m.iconSvg}</div>
+                    <span class="text-[11px] leading-tight">${m.labels[currentLang]}</span>
+                `;
+
+                container.appendChild(btn);
+            });
+        }
+
+        function renderFilterDropdown() {
+            const select = document.getElementById('moodFilter');
+            const currentValue = select.value || 'all';
+            const t = translations[currentLang];
+
+            let html = `<option value="all">${t.allMoods}</option>`;
+            moodDefinitions.forEach(m => {
+                html += `<option value="${m.id}">${m.labels[currentLang]}</option>`;
+            });
+
+            select.innerHTML = html;
+            select.value = currentValue;
+        }
+
+        /* CRUD OPERATIONS */
+        function saveEntry(e) {
+            e.preventDefault();
+
+            const editId = document.getElementById('editEntryId').value;
+            const title = document.getElementById('noteTitle').value.trim();
+            const date = document.getElementById('noteDate').value;
+            const content = document.getElementById('noteContent').value.trim();
+
+            if (!title || !content) return;
+
+            if (editId) {
+                const index = journalEntries.findIndex(item => item.id === editId);
+                if (index !== -1) {
+                    journalEntries[index] = {
+                        ...journalEntries[index],
+                        title,
+                        date,
+                        mood: selectedMood,
+                        content,
+                        updatedAt: new Date().toISOString()
+                    };
+                }
+            } else {
+                const newEntry = {
+                    id: 'note_' + Date.now(),
+                    title,
+                    date,
+                    mood: selectedMood,
+                    content,
+                    createdAt: new Date().toISOString()
+                };
+                journalEntries.unshift(newEntry);
+            }
+
+            localStorage.setItem('patrick_undersea_notes', JSON.stringify(journalEntries));
+            resetForm();
+            renderEntries();
+            showToast(translations[currentLang].savedSuccess);
+        }
+
+        function editEntry(id) {
+            const entry = journalEntries.find(item => item.id === id);
+            if (!entry) return;
+
+            document.getElementById('editEntryId').value = entry.id;
+            document.getElementById('noteTitle').value = entry.title;
+            document.getElementById('noteDate').value = entry.date;
+            document.getElementById('noteContent').value = entry.content;
+
+            selectedMood = entry.mood;
+            renderMoodOptions();
+
+            document.getElementById('btnSaveText').innerText = translations[currentLang].btnUpdate;
+            document.getElementById('btnCancel').classList.remove('hidden');
+
+            window.scrollTo({ top: 180, behavior: 'smooth' });
+        }
+
+        function deleteEntry(id) {
+            if (confirm("Delete this ocean journal note?")) {
+                journalEntries = journalEntries.filter(item => item.id !== id);
+                localStorage.setItem('patrick_undersea_notes', JSON.stringify(journalEntries));
+                renderEntries();
+                showToast(translations[currentLang].deleteSuccess);
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('journalForm').reset();
+            document.getElementById('editEntryId').value = '';
+            document.getElementById('noteDate').valueAsDate = new Date();
+            selectedMood = 'glowing_pearl';
+            renderMoodOptions();
+
+            document.getElementById('btnSaveText').innerText = translations[currentLang].btnSave;
+            document.getElementById('btnCancel').classList.add('hidden');
+        }
+
+        function renderEntries() {
+            const grid = document.getElementById('entriesGrid');
+            const emptyState = document.getElementById('emptyState');
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const filterMood = document.getElementById('moodFilter').value || 'all';
+
+            grid.innerHTML = '';
+
+            const filtered = journalEntries.filter(item => {
+                const matchesSearch = item.title.toLowerCase().includes(searchQuery) || item.content.toLowerCase().includes(searchQuery);
+                const matchesMood = filterMood === 'all' || item.mood === filterMood;
+                return matchesSearch && matchesMood;
+            });
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filtered.forEach(entry => {
+                const moodObj = moodDefinitions.find(m => m.id === entry.mood) || moodDefinitions[0];
+
+                const card = document.createElement('div');
+                card.className = "glass-card rounded-3xl p-5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card flex flex-col justify-between";
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between border-b border-[#48cae4]/30 pb-3 mb-3.5">
+                            <div class="flex items-center space-x-2.5">
+                                <div class="w-7 h-7 rounded-xl bg-gradient-to-tr ${moodObj.color} flex items-center justify-center shadow-bubble">
+                                    ${moodObj.iconSvg}
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-[#003e5c] block leading-none">${moodObj.labels[currentLang]}</span>
+                                    <span class="text-[10px] text-[#006699] font-mono font-semibold">${entry.date}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-1">
+                                <button onclick="editEntry('${entry.id}')" class="p-1.5 rounded-xl text-[#0077b6] hover:bg-[#48cae4]/20 transition-colors" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="deleteEntry('${entry.id}')" class="p-1.5 rounded-xl text-rose-500 hover:bg-rose-500/20 transition-colors" title="Delete">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <h3 class="text-base font-bold text-[#003853] mb-2 text-glow-title">${escapeHtml(entry.title)}</h3>
+                        <p class="text-xs sm:text-sm text-[#004b6e] whitespace-pre-wrap leading-relaxed font-normal">${escapeHtml(entry.content)}</p>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-[#48cae4]/20 flex justify-between items-center text-[10px] text-[#006699] font-bold">
+                        <span class="flex items-center space-x-1.5">
+                            <svg class="w-3.5 h-3.5 text-[#0087ca]" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12c0 3.6 1.9 6.75 4.75 8.52L12 16l5.25 4.52C20.1 18.75 22 15.6 22 12c0-5.52-4.48-10-10-10z"/>
+                            </svg>
+                            <span>Patrick Sealed Journal Entry</span>
+                        </span>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function exportData() {
+            if (journalEntries.length === 0) return;
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(journalEntries, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `patrick_undersea_journal_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+
+            showToast(translations[currentLang].exportSuccess);
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (Array.isArray(imported)) {
+                        journalEntries = imported;
+                        localStorage.setItem('patrick_undersea_notes', JSON.stringify(journalEntries));
+                        renderEntries();
+                        showToast(translations[currentLang].importSuccess);
+                    } else {
+                        showToast(translations[currentLang].importError);
+                    }
+                } catch (err) {
+                    showToast(translations[currentLang].importError);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function patrickTalk() {
+            const quotes = translations[currentLang].patrickQuotes;
+            const quote = quotes[Math.floor(Math.random() * quotes.length)];
+            const speechEl = document.getElementById('patrickSpeech');
+            
+            speechEl.style.opacity = '0';
+            setTimeout(() => {
+                speechEl.innerText = quote;
+                speechEl.style.opacity = '1';
+            }, 150);
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = msg;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        /* ===================================================
+           CANVAS ENGINE:
+           1. Glowing Blue Jellyfish (Image 1 Reference)
+           2. Glossy Game-Style Water Bubbles & Pops (Image 2 Reference)
+           =================================================== */
+        function initOceanEngine() {
+            const canvas = document.getElementById('oceanCanvas');
+            const ctx = canvas.getContext('2d');
+
+            let width = (canvas.width = window.innerWidth);
+            let height = (canvas.height = window.innerHeight);
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            // Glossy Bubbles (Image 2 style)
+            const bubbles = Array.from({ length: 28 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height + height,
+                radius: Math.random() * 14 + 8,
+                speed: Math.random() * 1.3 + 0.5,
+                wobbleSpeed: Math.random() * 0.05 + 0.02,
+                angle: Math.random() * Math.PI * 2
+            }));
+
+            // Reference Image 1 Bioluminescent Jellyfish
+            const jellyfishList = Array.from({ length: 4 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                radius: Math.random() * 26 + 22,
+                speedY: Math.random() * 0.35 + 0.15,
+                angle: Math.random() * Math.PI * 2,
+                pulse: Math.random() * Math.PI * 2
+            }));
+
+            // Pop FX Particles (Image 2 style)
+            const popParticles = [];
+
+            window.addEventListener('click', (e) => {
+                for (let i = 0; i < 10; i++) {
+                    const ang = Math.random() * Math.PI * 2;
+                    const spd = Math.random() * 5 + 2;
+                    popParticles.push({
+                        x: e.clientX,
+                        y: e.clientY,
+                        vx: Math.cos(ang) * spd,
+                        vy: Math.sin(ang) * spd,
+                        radius: Math.random() * 5 + 2.5,
+                        alpha: 1
+                    });
+                }
+            });
+
+            function drawJellyfishReference(j) {
+                j.y -= j.speedY;
+                j.angle += 0.02;
+                j.pulse += 0.04;
+                j.x += Math.sin(j.angle) * 0.5;
+
+                if (j.y < -100) {
+                    j.y = height + 100;
+                    j.x = Math.random() * width;
+                }
+
+                const pulseFactor = Math.sin(j.pulse) * 3;
+                const r = j.radius + pulseFactor;
+
+                ctx.save();
+                ctx.translate(j.x, j.y);
+
+                // Bioluminescent Radial Glow
+                const glowGrad = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r * 2.2);
+                glowGrad.addColorStop(0, 'rgba(0, 225, 255, 0.35)');
+                glowGrad.addColorStop(0.5, 'rgba(0, 119, 182, 0.2)');
+                glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = glowGrad;
+                ctx.beginPath();
+                ctx.arc(0, 0, r * 2.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Outer Glowing Bell
+                ctx.beginPath();
+                ctx.arc(0, 0, r, Math.PI * 0.95, Math.PI * 0.05, false);
+                ctx.quadraticCurveTo(r * 0.6, r * 0.3, 0, r * 0.25);
+                ctx.quadraticCurveTo(-r * 0.6, r * 0.3, -r * 0.95, 0);
+
+                const bellGrad = ctx.createLinearGradient(0, -r, 0, r);
+                bellGrad.addColorStop(0, 'rgba(144, 224, 239, 0.85)');
+                bellGrad.addColorStop(0.5, 'rgba(0, 180, 216, 0.65)');
+                bellGrad.addColorStop(1, 'rgba(3, 4, 94, 0.4)');
+                ctx.fillStyle = bellGrad;
+                ctx.fill();
+
+                ctx.strokeStyle = '#caf0f8';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Expressive Eyes (Ref Image 1)
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-r * 0.3, -r * 0.1, r * 0.2, 0, Math.PI * 2);
+                ctx.arc(r * 0.3, -r * 0.1, r * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#002845';
+                ctx.beginPath();
+                ctx.arc(-r * 0.28, -r * 0.1, r * 0.08, 0, Math.PI * 2);
+                ctx.arc(r * 0.32, -r * 0.1, r * 0.08, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Tentacles
+                const tentacleCount = 7;
+                for (let i = 0; i < tentacleCount; i++) {
+                    const tx = -r * 0.7 + (i * (r * 1.4 / (tentacleCount - 1)));
+                    ctx.beginPath();
+                    ctx.moveTo(tx, r * 0.25);
+                    
+                    const wave1 = Math.sin(j.pulse + i) * 10;
+                    const wave2 = Math.cos(j.pulse + i * 0.5) * 12;
+
+                    ctx.bezierCurveTo(
+                        tx + wave1, r * 1.2,
+                        tx - wave2, r * 2.2,
+                        tx + wave1 * 0.5, r * 3.2
+                    );
+
+                    ctx.strokeStyle = i % 2 === 0 ? 'rgba(144, 224, 239, 0.85)' : 'rgba(247, 174, 248, 0.75)';
+                    ctx.lineWidth = i % 2 === 0 ? 2 : 1.4;
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+
+            function drawGlossyBubble(b) {
+                b.y -= b.speed;
+                b.angle += b.wobbleSpeed;
+                b.x += Math.sin(b.angle) * 0.7;
+
+                if (b.y + b.radius < -20) {
+                    b.y = height + b.radius + Math.random() * 40;
+                    b.x = Math.random() * width;
+                }
+
+                ctx.save();
+                ctx.translate(b.x, b.y);
+
+                // Main Bubble Outer
+                ctx.beginPath();
+                ctx.arc(0, 0, b.radius, 0, Math.PI * 2);
+
+                const bubbleGrad = ctx.createRadialGradient(
+                    -b.radius * 0.35, -b.radius * 0.35, b.radius * 0.1,
+                    0, 0, b.radius
+                );
+                bubbleGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+                bubbleGrad.addColorStop(0.35, 'rgba(144, 224, 239, 0.5)');
+                bubbleGrad.addColorStop(0.8, 'rgba(0, 119, 182, 0.3)');
+                bubbleGrad.addColorStop(1, 'rgba(0, 77, 112, 0.6)');
+
+                ctx.fillStyle = bubbleGrad;
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 1.8;
+                ctx.stroke();
+
+                // Gloss Highlight Arc
+                ctx.beginPath();
+                ctx.arc(-b.radius * 0.3, -b.radius * 0.3, b.radius * 0.45, Math.PI * 1.1, Math.PI * 1.75);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+
+                // Deep Underwater Background Blend
+                const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+                bgGrad.addColorStop(0, 'rgba(0, 180, 216, 0.08)');
+                bgGrad.addColorStop(0.5, 'rgba(0, 119, 182, 0.22)');
+                bgGrad.addColorStop(1, 'rgba(3, 4, 94, 0.45)');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, width, height);
+
+                // Draw Jellyfish
+                jellyfishList.forEach(j => drawJellyfishReference(j));
+
+                // Draw Glossy Bubbles
+                bubbles.forEach(b => drawGlossyBubble(b));
+
+                // Render Pop Particles
+                for (let i = popParticles.length - 1; i >= 0; i--) {
+                    const p = popParticles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.alpha -= 0.035;
+
+                    if (p.alpha <= 0) {
+                        popParticles.splice(i, 1);
+                        continue;
+                    }
+
+                    ctx.save();
+                    ctx.globalAlpha = p.alpha;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#caf0f8';
+                    ctx.fill();
+                    ctx.strokeStyle = '#00b4d8';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+    </script>
+</body>
+</html>
